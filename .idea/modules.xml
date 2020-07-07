@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/billing-system.iml" filepath="$PROJECT_DIR$/billing-system.iml" />
+      <module fileurl="file://$PROJECT_DIR$/consumer/consumer.iml" filepath="$PROJECT_DIR$/consumer/consumer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/main-module/main-module.iml" filepath="$PROJECT_DIR$/main-module/main-module.iml" />
+      <module fileurl="file://$PROJECT_DIR$/rabbit-sender/rabbit-sender.iml" filepath="$PROJECT_DIR$/rabbit-sender/rabbit-sender.iml" />
+      <module fileurl="file://$PROJECT_DIR$/security-jwt/security-jwt.iml" filepath="$PROJECT_DIR$/security-jwt/security-jwt.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tariff/tariff.iml" filepath="$PROJECT_DIR$/tariff/tariff.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tester/tester.iml" filepath="$PROJECT_DIR$/tester/tester.iml" />
+    </modules>
+  </component>
+</project>
