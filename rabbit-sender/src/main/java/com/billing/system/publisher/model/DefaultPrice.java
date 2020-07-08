@@ -1,8 +1,8 @@
-package com.billing.system.consumer.model;
+package com.billing.system.publisher.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
+import javax.persistence.Entity;
 import javax.persistence.Id;
 /*
 * Данный класс предназначен для вычисления
@@ -11,16 +11,15 @@ import javax.persistence.Id;
 */
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class DefaultTariff {
+@Entity
+public class DefaultPrice {
     @Id
     private Long id;
 
     // цена одной минуты
-    private Long callCost = 3L;
+    private Long callCost;
     // цена одной СМС
-    private Long callSms = 5L;
+    private Long smsCost;
     // цена 100Кб интернета
-    private Long callInternet = 10L;
+    private Long internetCost;
 }

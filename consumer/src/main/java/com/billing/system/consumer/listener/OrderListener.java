@@ -1,7 +1,9 @@
 package com.billing.system.consumer.listener;
 
-import com.billing.system.consumer.model.DefaultTariff;
+import com.billing.system.publisher.exceptions.DefaultPriceNotFoundException;
+import com.billing.system.publisher.model.DefaultPrice;
 import com.billing.system.consumer.model.ServiceInfo;
+import com.billing.system.publisher.repository.DefaultPriceRepository;
 import com.billing.system.consumer.repository.ServiceInfoRepository;
 import com.billing.system.publisher.model.OrderInfo;
 import com.billing.system.publisher.repository.OrderInfoRepository;
@@ -12,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 
@@ -27,6 +28,8 @@ public class OrderListener {
     private ServiceInfoRepository serviceInfoRepository;
     @Autowired
     private OrderInfoRepository orderInfoRepository;
+    @Autowired
+    private DefaultPriceRepository defaultPriceRepository;
 
     // СДЕЛАТЬ ОБРАБОТКУ ОШИБОК
     // как-то надо словить ошибку, если ID услуги не найден
@@ -39,7 +42,8 @@ public class OrderListener {
         String service = serviceInfo.getService();
         AccountInfo accountInfo = accountInfoRepository.findByPhoneNumber(orderInfo.getPhoneNumber());
         Long difference = 0L;
-        DefaultTariff defaultTariff = new DefaultTariff();
+        DefaultPrice defaultPrice = defaultPriceRepository
+                .findById(1L).orElseThrow(() -> new DefaultPriceNotFoundException(1L));
         switch (service){
             case "call":
                 difference = accountInfo.getCall() - orderInfo.getExpenses();
@@ -48,7 +52,7 @@ public class OrderListener {
                 } else {
                     accountInfo.setCall(0L);
                     accountInfo.setBalance(accountInfo
-                            .getBalance() - (-difference * defaultTariff.getCallCost()));
+                            .getBalance() - (-difference * defaultPrice.getCallCost()));
                 }
                 break;
             case "sms":
@@ -58,7 +62,7 @@ public class OrderListener {
                 } else {
                     accountInfo.setSms(0L);
                     accountInfo.setBalance(accountInfo
-                            .getBalance() - (-difference * defaultTariff.getCallSms()));
+                            .getBalance() - (-difference * defaultPrice.getSmsCost()));
                 }
                 break;
             case "internet":
@@ -68,7 +72,7 @@ public class OrderListener {
                 } else {
                     accountInfo.setInternet(0L);
                     Long consumption = (accountInfo
-                            .getBalance() - (-difference * defaultTariff.getCallInternet() / 100));
+                            .getBalance() - (-difference * defaultPrice.getInternetCost() / 100));
                     accountInfo.setBalance(consumption);
                 }
                 break;

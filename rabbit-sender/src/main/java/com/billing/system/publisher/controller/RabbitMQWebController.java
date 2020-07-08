@@ -1,27 +1,30 @@
 package com.billing.system.publisher.controller;
 
 import com.billing.system.publisher.dto.BalanceChangerDto;
+import com.billing.system.publisher.dto.MaxServiceCost;
 import com.billing.system.publisher.dto.TariffChangerDto;
+import com.billing.system.publisher.exceptions.DefaultPriceNotFoundException;
+import com.billing.system.publisher.model.DefaultPrice;
 import com.billing.system.publisher.model.OrderInfo;
+import com.billing.system.publisher.repository.DefaultPriceRepository;
 import com.billing.system.publisher.service.RabbitMQSender;
 import com.billing.system.springsecurityjwt.config.jwt.JwtFilter;
 import com.billing.system.springsecurityjwt.config.jwt.JwtProvider;
 import com.billing.system.springsecurityjwt.entity.AccountInfo;
-import com.billing.system.springsecurityjwt.exception.ServiceNotFoundException;
 import com.billing.system.springsecurityjwt.repository.AccountInfoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 
 @RestController
@@ -32,6 +35,8 @@ public class RabbitMQWebController {
 
 	@Autowired
 	private AccountInfoRepository accountInfoRepository;
+	@Autowired
+	private DefaultPriceRepository defaultPriceRepository;
 
 	private final RabbitMQSender rabbitMQSender;
 	private final JwtFilter jwtFilter;
@@ -99,6 +104,32 @@ public class RabbitMQWebController {
 		}
 		rabbitMQSender.changeBalance(balanceChangerDto);
 		return String.format("The payment has been sent, in the amount of %s rubles", balanceChangerDto);
+	}
+
+
+	// Рассчёт максимальновозможного расходы каждой из услуг (остатки тарифа + баланс)
+	@PostMapping(value = "expenses")
+	public MaxServiceCost calculateMaximumExpenses(
+			@RequestBody MaxServiceCost maxServiceCost,
+			HttpServletRequest request
+	) {
+		DefaultPrice defaultPrice = defaultPriceRepository
+				.findById(1L).orElseThrow(() -> new DefaultPriceNotFoundException(1L));
+		AccountInfo accountInfo = accountInfoRepository.findByPhoneNumber(maxServiceCost.getPhoneNumber());
+
+		if (accountInfo == null) {
+			String token = jwtFilter.getTokenFromRequest((HttpServletRequest) request);
+			maxServiceCost.setPhoneNumber((String) jwtProvider.getClaimsFromToken(token).get("phoneNumber"));
+			accountInfo = accountInfoRepository.findByPhoneNumber(maxServiceCost.getPhoneNumber());
+		}
+		maxServiceCost.setMaxCall(accountInfo.getCall()
+				+ accountInfo.getBalance() / defaultPrice.getCallCost());
+		maxServiceCost.setMaxSms(accountInfo.getSms()
+				+ accountInfo.getBalance() / defaultPrice.getSmsCost());
+		maxServiceCost.setMaxInternet(accountInfo.getInternet()
+				+ accountInfo.getBalance() / defaultPrice.getInternetCost() * 100);
+
+		return maxServiceCost;
 	}
 
 }
