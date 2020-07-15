@@ -7,6 +7,8 @@ import com.billing.system.springsecurityjwt.entity.UserEntity;
 import com.billing.system.springsecurityjwt.repository.AccountInfoRepository;
 import com.billing.system.springsecurityjwt.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 
 @RestController
+@CrossOrigin
 public class AuthController {
     private final UserService userService;
     private final JwtProvider jwtProvider;
@@ -32,12 +35,13 @@ public class AuthController {
 
 
     @PostMapping("/registration")
-    public String registerUser(@RequestBody @Valid RegistrationRequest registrationRequest) {
+    public ResponseEntity registerUser(@RequestBody @Valid RegistrationRequest registrationRequest) {
         UserEntity userEntity = new UserEntity();
         userEntity.setPassword(registrationRequest.getPassword());
         userEntity.setLogin(registrationRequest.getLogin());
         userEntity.setPhoneNumber(registrationRequest.getPhoneNumber());
 
+        // ПЕРЕДЕЛАТЬ ЭТОТ УЖАС
         AccountInfo accountInfo = new AccountInfo();
         accountInfo.setBalance(0L);
         accountInfo.setPhoneNumber(registrationRequest.getPhoneNumber());
@@ -49,7 +53,7 @@ public class AuthController {
         accountInfoRepository.save(accountInfo);
 
         userService.saveUser(userEntity);
-        return "OK";
+        return ResponseEntity.ok("User registered successfully!");
     }
 
     @PostMapping("/auth")
