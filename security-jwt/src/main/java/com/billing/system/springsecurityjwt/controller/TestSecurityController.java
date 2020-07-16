@@ -7,6 +7,7 @@ import com.billing.system.springsecurityjwt.entity.UserEntity;
 import com.billing.system.springsecurityjwt.repository.UserEntityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
+@CrossOrigin
 public class TestSecurityController {
     private final UserEntityRepository userEntityRepository;
     private final PasswordEncoder passwordEncoder;
