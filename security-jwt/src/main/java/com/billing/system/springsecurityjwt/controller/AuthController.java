@@ -39,14 +39,22 @@ public class AuthController {
     public ResponseEntity registerUser(@Valid @RequestBody RegistrationRequest registrationRequest) {
 
         if (
+            registrationRequest.getLogin() == null ||
+            registrationRequest.getPassword() == null ||
+            registrationRequest.getPhoneNumber() == null ||
             registrationRequest.getLogin().length() < 4 ||
             registrationRequest.getPassword().length() < 4 ||
-            registrationRequest.getPhoneNumber().length() < 6 ||
-            accountInfoRepository.findByPhoneNumber(registrationRequest.getPhoneNumber()) != null ||
-            userService.findByLogin(registrationRequest.getLogin()) != null
-            // проверка по логину есть в фильтре (Ответ: Ошибка 500)
-        ) return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            registrationRequest.getPhoneNumber().length() < 6
+        )
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Invalid data: \n" + registrationRequest.toString());
+
+        if (accountInfoRepository.findByPhoneNumber(registrationRequest.getPhoneNumber()) != null)
+            return ResponseEntity.badRequest().body("This phone number is already registered!");
+
+        // проверка по логину есть в фильтре (Ответ: Ошибка 500)
+        if (userService.findByLogin(registrationRequest.getLogin()) != null)
+            return ResponseEntity.badRequest().body("This login is already taken!");
 
         UserEntity userEntity = new UserEntity();
         userEntity.setPassword(registrationRequest.getPassword());
