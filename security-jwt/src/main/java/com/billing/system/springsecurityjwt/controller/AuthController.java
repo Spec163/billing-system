@@ -7,6 +7,7 @@ import com.billing.system.springsecurityjwt.entity.UserEntity;
 import com.billing.system.springsecurityjwt.repository.AccountInfoRepository;
 import com.billing.system.springsecurityjwt.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,8 +35,19 @@ public class AuthController {
     }
 
 
-    @PostMapping("/registration")
-    public ResponseEntity registerUser(@RequestBody @Valid RegistrationRequest registrationRequest) {
+    @PostMapping("/registration") // Не работает валидация в RegistrationRequest
+    public ResponseEntity registerUser(@Valid @RequestBody RegistrationRequest registrationRequest) {
+
+        if (
+            registrationRequest.getLogin().length() < 4 ||
+            registrationRequest.getPassword().length() < 4 ||
+            registrationRequest.getPhoneNumber().length() < 6 ||
+            accountInfoRepository.findByPhoneNumber(registrationRequest.getPhoneNumber()) != null ||
+            userService.findByLogin(registrationRequest.getLogin()) != null
+            // проверка по логину есть в фильтре (Ответ: Ошибка 500)
+        ) return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid data: \n" + registrationRequest.toString());
+
         UserEntity userEntity = new UserEntity();
         userEntity.setPassword(registrationRequest.getPassword());
         userEntity.setLogin(registrationRequest.getLogin());
