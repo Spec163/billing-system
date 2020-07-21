@@ -12,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("admin/tariff")
+@CrossOrigin
 public class TariffController {
 
     private final TariffRepository tariffRepository;
