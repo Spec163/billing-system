@@ -12,6 +12,7 @@ import com.billing.system.springsecurityjwt.config.jwt.JwtFilter;
 import com.billing.system.springsecurityjwt.config.jwt.JwtProvider;
 import com.billing.system.springsecurityjwt.entity.AccountInfo;
 import com.billing.system.springsecurityjwt.repository.AccountInfoRepository;
+import org.omg.CORBA.BAD_OPERATION;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
@@ -55,7 +56,8 @@ public class RabbitMQWebController {
 	public void producer(
 			@RequestBody OrderInfo orderInfo,
 			HttpServletRequest request
-	) {
+	) throws Exception{
+		if (orderInfo.getServiceId() == 0) throw new Exception("BAD REQUEST !!!");
 		String token = jwtFilter.getTokenFromRequest((HttpServletRequest) request);
 
 		if (token == null) {
