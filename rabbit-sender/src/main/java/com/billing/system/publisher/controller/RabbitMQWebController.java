@@ -120,6 +120,7 @@ public class RabbitMQWebController {
 			maxServiceCost.setPhoneNumber((String) jwtProvider.getClaimsFromToken(token).get("phoneNumber"));
 			accountInfo = accountInfoRepository.findByPhoneNumber(maxServiceCost.getPhoneNumber());
 		}
+
 		maxServiceCost.setMaxCall(accountInfo.getCall()
 				+ accountInfo.getBalance() / defaultPrice.getCallCost());
 		maxServiceCost.setMaxSms(accountInfo.getSms()
