@@ -1,4 +1,4 @@
-package com.billing.system.springsecurityjwt.controller;
+package com.billing.system.springsecurityjwt.controller.request;
 
 import lombok.Data;
 

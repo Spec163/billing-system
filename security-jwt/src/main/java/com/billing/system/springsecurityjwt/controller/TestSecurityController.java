@@ -3,7 +3,8 @@ package com.billing.system.springsecurityjwt.controller;
 
 import com.billing.system.springsecurityjwt.config.jwt.JwtFilter;
 import com.billing.system.springsecurityjwt.config.jwt.JwtProvider;
-import com.billing.system.springsecurityjwt.entity.UserEntity;
+import com.billing.system.springsecurityjwt.entity.AccountInfo;
+import com.billing.system.springsecurityjwt.repository.AccountInfoRepository;
 import com.billing.system.springsecurityjwt.repository.UserEntityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,6 +36,8 @@ public class TestSecurityController {
     }
     @Autowired
     private JwtFilter jwtFilter;
+    @Autowired
+    private AccountInfoRepository accountInfoRepository;
 
     @GetMapping("/admin/get")
     public String getAdmin() {
@@ -60,8 +63,10 @@ public class TestSecurityController {
         return "Forbidden";
     }
 
-    @GetMapping("admin/users")
-    public List<UserEntity> getUserList() {
-        return userEntityRepository.findAll();
+    @GetMapping("user/users")
+    public List<AccountInfo> getUserList() {
+        List<AccountInfo> usersInfoList = accountInfoRepository.findAll();
+
+        return usersInfoList;
     }
 }

@@ -1,6 +1,5 @@
-package com.billing.system.springsecurityjwt.controller;
+package com.billing.system.springsecurityjwt.controller.response;
 
-import com.billing.system.springsecurityjwt.entity.RoleEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

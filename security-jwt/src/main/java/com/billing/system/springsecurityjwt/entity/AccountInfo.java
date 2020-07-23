@@ -12,6 +12,8 @@ public class AccountInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String login;
+
     private Long balance;
 
     private String phoneNumber;

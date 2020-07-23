@@ -2,6 +2,9 @@ package com.billing.system.springsecurityjwt.controller;
 
 
 import com.billing.system.springsecurityjwt.config.jwt.JwtProvider;
+import com.billing.system.springsecurityjwt.controller.request.AuthRequest;
+import com.billing.system.springsecurityjwt.controller.request.RegistrationRequest;
+import com.billing.system.springsecurityjwt.controller.response.AuthResponse;
 import com.billing.system.springsecurityjwt.entity.AccountInfo;
 import com.billing.system.springsecurityjwt.entity.UserEntity;
 import com.billing.system.springsecurityjwt.repository.AccountInfoRepository;
@@ -63,6 +66,7 @@ public class AuthController {
 
         // ПЕРЕДЕЛАТЬ ЭТОТ УЖАС
         AccountInfo accountInfo = new AccountInfo();
+        accountInfo.setLogin(registrationRequest.getLogin());
         accountInfo.setBalance(0L);
         accountInfo.setPhoneNumber(registrationRequest.getPhoneNumber());
         accountInfo.setTitle("Default");
