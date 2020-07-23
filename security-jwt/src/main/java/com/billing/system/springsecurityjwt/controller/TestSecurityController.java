@@ -63,7 +63,7 @@ public class TestSecurityController {
         return "Forbidden";
     }
 
-    @GetMapping("user/users")
+    @GetMapping("admin/users")
     public List<AccountInfo> getUserList() {
         List<AccountInfo> usersInfoList = accountInfoRepository.findAll();
 
