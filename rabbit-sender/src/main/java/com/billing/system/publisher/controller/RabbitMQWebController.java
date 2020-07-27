@@ -57,15 +57,13 @@ public class RabbitMQWebController {
 			HttpServletRequest request
 	) throws Exception{
 		if (orderInfo.getServiceId() == 0) throw new Exception("BAD REQUEST !!!");
-		String token = jwtFilter.getTokenFromRequest((HttpServletRequest) request);
 
-		if (token == null) {
-			accountInfoRepository.findByPhoneNumber(orderInfo.getPhoneNumber());
-		} else {
-			// вытаскиваем значение поля (phoneNumber) из токена
-			String phoneNumber = (String) jwtProvider.getClaimsFromToken(token).get("phoneNumber");
-			orderInfo.setPhoneNumber(phoneNumber);
+		if (orderInfo.getPhoneNumber() == null) {
+			orderInfo.setPhoneNumber(getPhoneNumberFromRequest(request));
+		} else if (accountInfoRepository.findByPhoneNumber(orderInfo.getPhoneNumber()) == null) {
+			orderInfo.setPhoneNumber(getPhoneNumberFromRequest(request));
 		}
+
 
 		rabbitMQSender.sendOrder(orderInfo);
 	}
@@ -75,10 +73,7 @@ public class RabbitMQWebController {
 			@RequestBody TariffChangerDto tariffChangerDto,
 			HttpServletRequest request
 	) {
-		String token = jwtFilter.getTokenFromRequest((HttpServletRequest) request);
-		// вытаскиваем значение поля (phoneNumber) из токена
-		String phoneNumber = (String) jwtProvider.getClaimsFromToken(token).get("phoneNumber");
-		tariffChangerDto.setPhoneNumber(phoneNumber);
+		tariffChangerDto.setPhoneNumber(getPhoneNumberFromRequest(request));
 
 		rabbitMQSender.sendTariff(tariffChangerDto);
 
@@ -88,17 +83,20 @@ public class RabbitMQWebController {
 	@PostMapping(value = "replenish")
 	public String replenishBalance(
 			@RequestBody BalanceChangerDto balanceChangerDto,
-			HttpServletRequest request,
-			HttpServletResponse response
+			HttpServletRequest request
 	) throws IOException {
-		String token = jwtFilter.getTokenFromRequest((HttpServletRequest) request);
-		// вытаскиваем значение поля (phoneNumber) из токена
-		String phoneNumber = (String) jwtProvider.getClaimsFromToken(token).get("phoneNumber");
+		String phoneNumber = balanceChangerDto.getPhoneNumber();
+		if (balanceChangerDto.getPhoneNumber() == null) {
+			phoneNumber = getPhoneNumberFromRequest(request);
+		} else if (accountInfoRepository.findByPhoneNumber(balanceChangerDto.getPhoneNumber()) == null) {
+			phoneNumber = getPhoneNumberFromRequest(request); // сомнительное действие !!!
+		}
+
 		balanceChangerDto.setPhoneNumber(phoneNumber);
 
 		// проверки на валидность номера не нужны, тк он будет браться из токена
 		if (balanceChangerDto.getMoney() < 1 || balanceChangerDto.getMoney() == null) {
-			response.sendRedirect("/user/info");
+			logger.error("Incorrect amount: {}", balanceChangerDto.getMoney());
 			return null;
 		}
 		rabbitMQSender.changeBalance(balanceChangerDto);
@@ -117,8 +115,7 @@ public class RabbitMQWebController {
 		AccountInfo accountInfo = accountInfoRepository.findByPhoneNumber(maxServiceCost.getPhoneNumber());
 
 		if (accountInfo == null) {
-			String token = jwtFilter.getTokenFromRequest((HttpServletRequest) request);
-			maxServiceCost.setPhoneNumber((String) jwtProvider.getClaimsFromToken(token).get("phoneNumber"));
+			maxServiceCost.setPhoneNumber(getPhoneNumberFromRequest(request));
 			accountInfo = accountInfoRepository.findByPhoneNumber(maxServiceCost.getPhoneNumber());
 		}
 
@@ -130,6 +127,14 @@ public class RabbitMQWebController {
 				+ accountInfo.getBalance() / defaultPrice.getInternetCost() * 100);
 
 		return maxServiceCost;
+	}
+
+	private String getPhoneNumberFromRequest(HttpServletRequest request) {
+		String phoneNumber = null;
+		String token = jwtFilter.getTokenFromRequest((HttpServletRequest) request);
+		// вытаскиваем значение поля (phoneNumber) из токена
+		phoneNumber = (String) jwtProvider.getClaimsFromToken(token).get("phoneNumber");
+		return phoneNumber;
 	}
 
 }
