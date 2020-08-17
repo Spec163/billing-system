@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("admin/tariff")
+@RequestMapping("profile/tariff")
 @CrossOrigin
 public class TariffController {
 
