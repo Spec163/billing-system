@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class TariffListener {
 
-    private Logger logger = LoggerFactory.getLogger(TariffListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(TariffListener.class);
 
     @Autowired
     private TariffRepository tariffRepository;
@@ -24,12 +24,12 @@ public class TariffListener {
     private AccountInfoRepository accountInfoRepository;
 
     @RabbitListener(queues = "spec.tariffChangerQueue")
-    public void tariffConsume(TariffChangerDto tariffChangerDto) {
+    public void tariffConsume(final TariffChangerDto tariffChangerDto) {
         logger.warn("A new tariff has been set for phone number: {} ", tariffChangerDto.getPhoneNumber());
-        Tariff tariff = tariffRepository
-                .findById(tariffChangerDto.getId())
-                .orElseThrow(() -> new TariffNotFoundException(tariffChangerDto.getId()));
-        AccountInfo accountInfo = accountInfoRepository.findByPhoneNumber(tariffChangerDto.getPhoneNumber());
+        final Tariff tariff = this.tariffRepository
+            .findById(tariffChangerDto.getId())
+            .orElseThrow(() -> new TariffNotFoundException(tariffChangerDto.getId()));
+        final AccountInfo accountInfo = this.accountInfoRepository.findByPhoneNumber(tariffChangerDto.getPhoneNumber());
 
         accountInfo.setBalance(accountInfo.getBalance() - tariff.getPrice());
         accountInfo.setCall(tariff.getCall());
@@ -38,6 +38,6 @@ public class TariffListener {
         accountInfo.setTitle(tariff.getTitle());
         accountInfo.setPrice(tariff.getPrice());
 
-        accountInfoRepository.save(accountInfo);
+        this.accountInfoRepository.save(accountInfo);
     }
 }

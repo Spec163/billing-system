@@ -1,5 +1,10 @@
 package com.billing.system.springsecurityjwt.config.jwt;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import com.billing.system.springsecurityjwt.entity.UserEntity;
 import com.billing.system.springsecurityjwt.repository.UserEntityRepository;
 import io.jsonwebtoken.Claims;
@@ -12,12 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
 @Component
 @Log
 public class JwtProvider {
@@ -28,42 +27,42 @@ public class JwtProvider {
     @Autowired
     private UserEntityRepository userEntityRepository;
 
-    private Logger logger = LoggerFactory.getLogger(JwtProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(JwtProvider.class);
 
     // сохранять информацию через claims
-    public String generateToken(String login) {
-        Date date = Date.from(LocalDate.now().plusDays(20).atStartOfDay(ZoneId.systemDefault()).toInstant());
+    public String generateToken(final String login) {
+        final Date date = Date.from(LocalDate.now().plusDays(20).atStartOfDay(ZoneId.systemDefault()).toInstant());
         final Map<String, Object> claims = new HashMap<>();
-        UserEntity userInfo = userEntityRepository.findByLogin(login);
+        final UserEntity userInfo = this.userEntityRepository.findByLogin(login);
         claims.put("phoneNumber", userInfo.getPhoneNumber());
         claims.put("login", userInfo.getLogin());
-        String result = Jwts.builder()
-                .setSubject(login)
-                .setExpiration(date)
-                .setIssuedAt(new Date())
-                .signWith(SignatureAlgorithm.HS512, jwtSecret)
-                .addClaims(claims)
-                .compact();
+        final String result = Jwts.builder()
+            .setSubject(login)
+            .setExpiration(date)
+            .setIssuedAt(new Date())
+            .signWith(SignatureAlgorithm.HS512, this.jwtSecret)
+            .addClaims(claims)
+            .compact();
         logger.debug("created jwt = {}", result);
         return result;
     }
 
-    public boolean validateToken(String token) {
+    boolean validateToken(final String token) {
         try {
-            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
+            Jwts.parser().setSigningKey(this.jwtSecret).parseClaimsJws(token);
             return true;
-        } catch (Exception e) {
+        } catch (final Exception e) {
             log.severe("invalid token");
         }
         return false;
     }
 
-    public String getLoginFromToken(String token) {
-        Claims claims = Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody();
+    String getLoginFromToken(final String token) {
+        final Claims claims = Jwts.parser().setSigningKey(this.jwtSecret).parseClaimsJws(token).getBody();
         return claims.getSubject();
     }
 
-    public Map<String, Object> getClaimsFromToken(String token) {
-        return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody();
+    public Map<String, Object> getClaimsFromToken(final String token) {
+        return Jwts.parser().setSigningKey(this.jwtSecret).parseClaimsJws(token).getBody();
     }
 }

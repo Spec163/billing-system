@@ -1,11 +1,11 @@
 package com.billing.system.consumer.listener;
 
+import com.billing.system.consumer.model.ServiceInfo;
+import com.billing.system.consumer.repository.ServiceInfoRepository;
 import com.billing.system.publisher.exceptions.DefaultPriceNotFoundException;
 import com.billing.system.publisher.model.DefaultPrice;
-import com.billing.system.consumer.model.ServiceInfo;
-import com.billing.system.publisher.repository.DefaultPriceRepository;
-import com.billing.system.consumer.repository.ServiceInfoRepository;
 import com.billing.system.publisher.model.OrderInfo;
+import com.billing.system.publisher.repository.DefaultPriceRepository;
 import com.billing.system.publisher.repository.OrderInfoRepository;
 import com.billing.system.springsecurityjwt.entity.AccountInfo;
 import com.billing.system.springsecurityjwt.exception.ServiceNotFoundException;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class OrderListener {
 
-    private Logger logger = LoggerFactory.getLogger(OrderListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrderListener.class);
 
     @Autowired
     private AccountInfoRepository accountInfoRepository;
@@ -34,17 +34,17 @@ public class OrderListener {
     // СДЕЛАТЬ ОБРАБОТКУ ОШИБОК
     // как-то надо словить ошибку, если ID услуги не найден
     @RabbitListener(queues = "spec.billingQueue")
-    public void billingConsume(OrderInfo orderInfo) {
+    public void billingConsume(final OrderInfo orderInfo) {
         logger.warn("Information about the service provided to {} RECEIVED", orderInfo.getPhoneNumber());
-        ServiceInfo serviceInfo = serviceInfoRepository
-                .findById(orderInfo.getServiceId())
-                .orElseThrow(() -> new ServiceNotFoundException(orderInfo.getServiceId()));
-        String service = serviceInfo.getService();
-        AccountInfo accountInfo = accountInfoRepository.findByPhoneNumber(orderInfo.getPhoneNumber());
+        final ServiceInfo serviceInfo = this.serviceInfoRepository
+            .findById(orderInfo.getServiceId())
+            .orElseThrow(() -> new ServiceNotFoundException(orderInfo.getServiceId()));
+        final String service = serviceInfo.getService();
+        final AccountInfo accountInfo = this.accountInfoRepository.findByPhoneNumber(orderInfo.getPhoneNumber());
         Long difference = 0L;
-        DefaultPrice defaultPrice = defaultPriceRepository
-                .findById(1L).orElseThrow(() -> new DefaultPriceNotFoundException(1L));
-        switch (service){
+        final DefaultPrice defaultPrice = this.defaultPriceRepository
+            .findById(1L).orElseThrow(() -> new DefaultPriceNotFoundException(1L));
+        switch (service) {
             case "call":
                 difference = accountInfo.getCall() - orderInfo.getExpenses();
                 if (difference > -1 || difference == null) {
@@ -52,7 +52,7 @@ public class OrderListener {
                 } else {
                     accountInfo.setCall(0L);
                     accountInfo.setBalance(accountInfo
-                            .getBalance() - (-difference * defaultPrice.getCallCost()));
+                        .getBalance() - (-difference * defaultPrice.getCallCost()));
                 }
                 break;
             case "sms":
@@ -62,7 +62,7 @@ public class OrderListener {
                 } else {
                     accountInfo.setSms(0L);
                     accountInfo.setBalance(accountInfo
-                            .getBalance() - (-difference * defaultPrice.getSmsCost()));
+                        .getBalance() - (-difference * defaultPrice.getSmsCost()));
                 }
                 break;
             case "internet":
@@ -71,16 +71,16 @@ public class OrderListener {
                     accountInfo.setInternet(difference);
                 } else {
                     accountInfo.setInternet(0L);
-                    Long consumption = (accountInfo
-                            .getBalance() - (-difference * defaultPrice.getInternetCost() / 100));
+                    final Long consumption = (accountInfo
+                        .getBalance() - (-difference * defaultPrice.getInternetCost() / 100));
                     accountInfo.setBalance(consumption);
                 }
                 break;
             default:
                 throw new ServiceNotFoundException(orderInfo.getId());
         }
-        accountInfoRepository.save(accountInfo);
-        orderInfoRepository.save(orderInfo);
+        this.accountInfoRepository.save(accountInfo);
+        this.orderInfoRepository.save(orderInfo);
 
         logger.warn("{} --- ", serviceInfo);
     }

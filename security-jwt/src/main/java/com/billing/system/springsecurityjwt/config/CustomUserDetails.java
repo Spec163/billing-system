@@ -1,12 +1,11 @@
 package com.billing.system.springsecurityjwt.config;
 
+import java.util.Collection;
+import java.util.Collections;
 import com.billing.system.springsecurityjwt.entity.UserEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.Collection;
-import java.util.Collections;
 
 public class CustomUserDetails implements UserDetails {
 
@@ -14,28 +13,28 @@ public class CustomUserDetails implements UserDetails {
     private String password;
     private Collection<? extends GrantedAuthority> grantedAuthorities;
 
-    public static CustomUserDetails fromUserEntityToCustomUserDetails(UserEntity userEntity) {
-        CustomUserDetails customUserDetails = new CustomUserDetails();
+    static CustomUserDetails fromUserEntityToCustomUserDetails(final UserEntity userEntity) {
+        final CustomUserDetails customUserDetails = new CustomUserDetails();
         customUserDetails.login = userEntity.getLogin();
         customUserDetails.password = userEntity.getPassword();
         customUserDetails.grantedAuthorities = Collections
-                .singletonList(new SimpleGrantedAuthority(userEntity.getRoleEntity().getName()));
+            .singletonList(new SimpleGrantedAuthority(userEntity.getRoleEntity().getName()));
         return customUserDetails;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return grantedAuthorities;
+        return this.grantedAuthorities;
     }
 
     @Override
     public String getPassword() {
-        return password;
+        return this.password;
     }
 
     @Override
     public String getUsername() {
-        return login;
+        return this.login;
     }
 
     @Override

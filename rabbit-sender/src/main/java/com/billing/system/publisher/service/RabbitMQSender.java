@@ -13,43 +13,44 @@ import org.springframework.stereotype.Service;
 @Service
 public class RabbitMQSender {
 
-	Logger logger = LoggerFactory.getLogger(RabbitMQSender.class);
-	
-	private final AmqpTemplate amqpTemplate;
-	
-	@Value("${example.rabbitmq.exchange}")
-	private String exchange;
-	
-	@Value("${example.rabbitmq.routingKey}")
-	private String routingKey;
+    private static final Logger logger = LoggerFactory.getLogger(RabbitMQSender.class);
 
-	@Value("${example.rabbitmq.billing}")
-	private String billingQueue;
+    private final AmqpTemplate amqpTemplate;
 
-	@Value("${example.rabbitmq.tariff}")
-	private String tariffChangerQueue;
+    @Autowired
+    public RabbitMQSender(final AmqpTemplate amqpTemplate) {
+        this.amqpTemplate = amqpTemplate;
+    }
 
-	@Value("${example.rabbitmq.balance}")
-	private String balanceQueue;
+    @Value("${example.rabbitmq.exchange}")
+    private String exchange;
 
-	@Autowired
-	public RabbitMQSender(AmqpTemplate amqpTemplate) {
-		this.amqpTemplate = amqpTemplate;
-	}
+    @Value("${example.rabbitmq.routingKey}")
+    private String routingKey;
 
-	public void sendOrder(OrderInfo orderInfo) {
-		amqpTemplate.convertAndSend(billingQueue, orderInfo);
-		logger.warn("Send msg to billingQueue = {}", orderInfo);
-	}
+    @Value("${example.rabbitmq.billing}")
+    private String billingQueue;
 
-	public void sendTariff(TariffChangerDto tariffChangerDto) {
-		amqpTemplate.convertAndSend(tariffChangerQueue, tariffChangerDto);
-		logger.warn("Send msg to tariffChangerQueue phone number = {}", tariffChangerDto);
-	}
+    @Value("${example.rabbitmq.tariff}")
+    private String tariffChangerQueue;
 
-	public void changeBalance(BalanceChangerDto balanceChangerDto) {
-		amqpTemplate.convertAndSend(balanceQueue, balanceChangerDto);
-		logger.warn("Attempt to replenish the balance of = {} rub", balanceChangerDto.getMoney());
-	}
+    @Value("${example.rabbitmq.balance}")
+    private String balanceQueue;
+
+
+    public void sendOrder(final OrderInfo orderInfo) {
+        this.amqpTemplate.convertAndSend(this.billingQueue, orderInfo);
+        logger.warn("Send msg to billingQueue = {}", orderInfo);
+    }
+
+    public void sendTariff(final TariffChangerDto tariffChangerDto) {
+        this.amqpTemplate.convertAndSend(this.tariffChangerQueue, tariffChangerDto);
+        logger.warn("Send msg to tariffChangerQueue phone number = {}", tariffChangerDto);
+    }
+
+    public void changeBalance(final BalanceChangerDto balanceChangerDto) {
+        this.amqpTemplate.convertAndSend(this.balanceQueue, balanceChangerDto);
+        logger.warn("Attempt to replenish the balance of = {} rub", balanceChangerDto.getMoney());
+    }
 
 }

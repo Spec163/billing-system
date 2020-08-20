@@ -12,21 +12,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class BalanceListener {
 
-    private Logger logger = LoggerFactory.getLogger(BalanceListener.class);
-    
+    private static final Logger logger = LoggerFactory.getLogger(BalanceListener.class);
+
     @Autowired
     private AccountInfoRepository accountInfoRepository;
 
     // СДЕЛАТЬ ОБРАБОТКУ ОШИБОК
     @RabbitListener(queues = "spec.balanceQueue")
-    public void changeBalanceRabbit(BalanceChangerDto balanceChangerDto) {
+    public void changeBalanceRabbit(final BalanceChangerDto balanceChangerDto) {
         logger.warn("The balance is replenished by {} rub. on the phone number = {}",
-                balanceChangerDto.getMoney(),
-                balanceChangerDto.getPhoneNumber());
+            balanceChangerDto.getMoney(),
+            balanceChangerDto.getPhoneNumber());
 
-        AccountInfo accountInfo = accountInfoRepository
-                .findByPhoneNumber(balanceChangerDto.getPhoneNumber());
+        final AccountInfo accountInfo = this.accountInfoRepository
+            .findByPhoneNumber(balanceChangerDto.getPhoneNumber());
         accountInfo.setBalance(accountInfo.getBalance() + balanceChangerDto.getMoney());
-        accountInfoRepository.save(accountInfo);
+        this.accountInfoRepository.save(accountInfo);
     }
 }

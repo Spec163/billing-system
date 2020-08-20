@@ -1,6 +1,7 @@
 package com.billing.system.springsecurityjwt.controller;
 
 
+import javax.validation.Valid;
 import com.billing.system.springsecurityjwt.config.jwt.JwtProvider;
 import com.billing.system.springsecurityjwt.controller.request.AuthRequest;
 import com.billing.system.springsecurityjwt.controller.request.RegistrationRequest;
@@ -17,8 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
-
 @RestController
 @CrossOrigin
 public class AuthController {
@@ -28,9 +27,9 @@ public class AuthController {
 
     @Autowired
     public AuthController(
-            final UserService userService,
-            final JwtProvider jwtProvider,
-            final AccountInfoRepository accountInfoRepository
+        final UserService userService,
+        final JwtProvider jwtProvider,
+        final AccountInfoRepository accountInfoRepository
     ) {
         this.userService = userService;
         this.jwtProvider = jwtProvider;
@@ -39,33 +38,33 @@ public class AuthController {
 
 
     @PostMapping("/registration") // Не работает валидация в RegistrationRequest
-    public ResponseEntity registerUser(@Valid @RequestBody RegistrationRequest registrationRequest) {
+    public ResponseEntity registerUser(@Valid @RequestBody final RegistrationRequest registrationRequest) {
 
         if (
             registrationRequest.getLogin() == null ||
-            registrationRequest.getPassword() == null ||
-            registrationRequest.getPhoneNumber() == null ||
-            registrationRequest.getLogin().length() < 4 ||
-            registrationRequest.getPassword().length() < 4 ||
-            registrationRequest.getPhoneNumber().length() < 6
+                registrationRequest.getPassword() == null ||
+                registrationRequest.getPhoneNumber() == null ||
+                registrationRequest.getLogin().length() < 4 ||
+                registrationRequest.getPassword().length() < 4 ||
+                registrationRequest.getPhoneNumber().length() < 6
         )
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid data: \n" + registrationRequest.toString());
+                .body("Invalid data: \n" + registrationRequest.toString());
 
-        if (accountInfoRepository.findByPhoneNumber(registrationRequest.getPhoneNumber()) != null)
+        if (this.accountInfoRepository.findByPhoneNumber(registrationRequest.getPhoneNumber()) != null)
             return ResponseEntity.badRequest().body("This phone number is already registered!");
 
         // проверка по логину есть в фильтре (Ответ: Ошибка 500)
-        if (userService.findByLogin(registrationRequest.getLogin()) != null)
+        if (this.userService.findByLogin(registrationRequest.getLogin()) != null)
             return ResponseEntity.badRequest().body("This login is already taken!");
 
-        UserEntity userEntity = new UserEntity();
+        final UserEntity userEntity = new UserEntity();
         userEntity.setPassword(registrationRequest.getPassword());
         userEntity.setLogin(registrationRequest.getLogin());
         userEntity.setPhoneNumber(registrationRequest.getPhoneNumber());
 
         // ПЕРЕДЕЛАТЬ ЭТОТ УЖАС
-        AccountInfo accountInfo = new AccountInfo();
+        final AccountInfo accountInfo = new AccountInfo();
         accountInfo.setLogin(registrationRequest.getLogin());
         accountInfo.setBalance(0L);
         accountInfo.setPhoneNumber(registrationRequest.getPhoneNumber());
@@ -74,17 +73,18 @@ public class AuthController {
         accountInfo.setCall(0L);
         accountInfo.setSms(0L);
         accountInfo.setInternet(0L);
-        accountInfoRepository.save(accountInfo);
+        this.accountInfoRepository.save(accountInfo);
 
-        userService.saveUser(userEntity);
+        this.userService.saveUser(userEntity);
         return ResponseEntity.ok("User registered successfully!");
     }
 
     @PostMapping("/auth")
-    public AuthResponse auth(@RequestBody AuthRequest request) {
-        UserEntity userEntity = userService.findByLoginAndPassword(request.getLogin(), request.getPassword());
-        String token = jwtProvider.generateToken(userEntity.getLogin());
-        AuthResponse authResponse = new AuthResponse(token, userEntity.getRoleEntity().getName());
+    public AuthResponse auth(@RequestBody final AuthRequest request) {
+        final UserEntity userEntity =
+            this.userService.findByLoginAndPassword(request.getLogin(), request.getPassword());
+        final String token = this.jwtProvider.generateToken(userEntity.getLogin());
+        final AuthResponse authResponse = new AuthResponse(token, userEntity.getRoleEntity().getName());
         return authResponse;
     }
 }

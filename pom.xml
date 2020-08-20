@@ -102,13 +102,38 @@
 
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
+
+    <profiles>
+        <profile>
+            <id>quilce</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.qulice</groupId>
+                        <artifactId>qulice-maven-plugin</artifactId>
+                        <version>0.18.19</version>
+                        <configuration>
+                            <license>file:${project.parent.basedir}/LICENSE.txt</license>
+                            <excludes>
+                                <!--                                <exclude>checkstyle:/src/examples/.*</exclude>-->
+                                <!--                                <exclude>findbugs:~com.qulice.foo.*</exclude>-->
+                                <exclude>checkstyle:.*</exclude>
+                                <exclude>findbugs:.*</exclude>
+                                <exclude>dependencies:.*</exclude>
+                                <exclude>duplicatefinder:.*</exclude>
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

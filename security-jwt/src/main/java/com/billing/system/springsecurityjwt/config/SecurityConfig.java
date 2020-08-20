@@ -19,25 +19,25 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final JwtFilter jwtFilter;
 
     @Autowired
-    public SecurityConfig(JwtFilter jwtFilter) {
+    public SecurityConfig(final JwtFilter jwtFilter) {
         this.jwtFilter = jwtFilter;
     }
 
 
     @Override
-    protected void configure(HttpSecurity http) throws Exception {
+    protected void configure(final HttpSecurity http) throws Exception {
         http
-                .httpBasic().disable()
-                .csrf().disable()
-//                .cors().disable()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .httpBasic().disable()
+            .csrf().disable()
+            //                .cors().disable()
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
-                .authorizeRequests()
-                .antMatchers("/admin/*").hasRole("ADMIN")
-                .antMatchers("/user/*").hasAnyRole("ADMIN", "USER")
-                .antMatchers("/register", "/auth").permitAll()
+            .authorizeRequests()
+            .antMatchers("/admin/*").hasRole("ADMIN")
+            .antMatchers("/user/*").hasAnyRole("ADMIN", "USER")
+            .antMatchers("/register", "/auth").permitAll()
             .and()
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(this.jwtFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
     @Bean
