@@ -4,11 +4,11 @@ package com.billing.system.tariff.controller;
 // @checkstyle (JavadocPackageCheck 1000 lines)
 
 
-import java.time.LocalDateTime;
 import java.util.List;
-import com.billing.system.tariff.exceptions.TariffNotFoundException;
 import com.billing.system.tariff.model.Tariff;
-import com.billing.system.tariff.repository.TariffRepository;
+import com.billing.system.tariff.service.TariffService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,35 +29,30 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin
 public class TariffController {
 
-    /**
-     *
-     */
-    private final TariffRepository tariffRepository;
+    private static final Logger logger = LoggerFactory.getLogger(TariffController.class);
 
-    /**
-     *
-     * @param tariffRepository
-     */
+
+    private final TariffService tariffService;
+
     @Autowired
-    public TariffController(final TariffRepository tariffRepository) {
-        this.tariffRepository = tariffRepository;
+    public TariffController(final TariffService tariffService) {
+        this.tariffService = tariffService;
     }
 
     @GetMapping
     public List<Tariff> getAllTariffs() {
-        return this.tariffRepository.findAll();
+        return this.tariffService.findAll();
     }
 
     @GetMapping("{id}")
     public Tariff getTariff(@PathVariable("id") final Long id) {
-        return this.tariffRepository.findById(id).orElseThrow(() -> new TariffNotFoundException(id));
+        return this.tariffService.findById(id);
     }
 
     @PostMapping
     public Tariff createTariff(@RequestBody final Tariff tariff) {
-        tariff.setCreationDate(LocalDateTime.now());
 
-        return this.tariffRepository.save(tariff);
+        return this.tariffService.saveTariff(tariff);
     }
 
     @PutMapping("{id}")
@@ -65,24 +60,11 @@ public class TariffController {
         @PathVariable("id") final Long id,
         @RequestBody final Tariff newTariff
     ) {
-
-        return this.tariffRepository.findById(id)
-            .map(tariff -> {
-                tariff.setTitle(newTariff.getTitle());
-                tariff.setPrice(newTariff.getPrice());
-                tariff.setCall(newTariff.getCall());
-                tariff.setSms(newTariff.getSms());
-                tariff.setInternet(newTariff.getInternet());
-                return this.tariffRepository.save(tariff);
-            })
-            .orElseGet(() -> {
-                newTariff.setId(id);
-                return this.tariffRepository.save(newTariff);
-            });
+        return this.tariffService.updateTariff(id, newTariff);
     }
 
     @DeleteMapping("{id}")
     public void delete(@PathVariable("id") final Long id) {
-        this.tariffRepository.deleteById(id);
+        this.tariffService.deleteTariff(id);
     }
 }

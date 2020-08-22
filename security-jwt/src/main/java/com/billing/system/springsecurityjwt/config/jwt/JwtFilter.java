@@ -54,12 +54,4 @@ public class JwtFilter extends GenericFilterBean {
         }
         return null;
     }
-
-    public String getPhoneNumberFromRequest(final HttpServletRequest request) {
-        String phoneNumber = null;
-        final String token = this.getTokenFromRequest((HttpServletRequest) request);
-        // вытаскиваем значение поля (phoneNumber) из токена
-        phoneNumber = (String) this.jwtProvider.getClaimsFromToken(token).get("phoneNumber");
-        return phoneNumber;
-    }
 }

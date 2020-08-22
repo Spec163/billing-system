@@ -2,16 +2,11 @@ package com.billing.system.springsecurityjwt.controller;
 
 
 import javax.validation.Valid;
-import com.billing.system.springsecurityjwt.config.jwt.JwtProvider;
 import com.billing.system.springsecurityjwt.controller.request.AuthRequest;
 import com.billing.system.springsecurityjwt.controller.request.RegistrationRequest;
 import com.billing.system.springsecurityjwt.controller.response.AuthResponse;
-import com.billing.system.springsecurityjwt.entity.AccountInfo;
-import com.billing.system.springsecurityjwt.entity.UserEntity;
-import com.billing.system.springsecurityjwt.repository.AccountInfoRepository;
-import com.billing.system.springsecurityjwt.service.UserService;
+import com.billing.system.springsecurityjwt.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,70 +16,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @CrossOrigin
 public class AuthController {
-    private final UserService userService;
-    private final JwtProvider jwtProvider;
-    private final AccountInfoRepository accountInfoRepository;
+
+    private final AccountService accountService;
 
     @Autowired
-    public AuthController(
-        final UserService userService,
-        final JwtProvider jwtProvider,
-        final AccountInfoRepository accountInfoRepository
-    ) {
-        this.userService = userService;
-        this.jwtProvider = jwtProvider;
-        this.accountInfoRepository = accountInfoRepository;
+    public AuthController(final AccountService accountService) {
+        this.accountService = accountService;
     }
 
 
     @PostMapping("/registration") // Не работает валидация в RegistrationRequest
-    public ResponseEntity registerUser(@Valid @RequestBody final RegistrationRequest registrationRequest) {
-
-        if (
-            registrationRequest.getLogin() == null ||
-                registrationRequest.getPassword() == null ||
-                registrationRequest.getPhoneNumber() == null ||
-                registrationRequest.getLogin().length() < 4 ||
-                registrationRequest.getPassword().length() < 4 ||
-                registrationRequest.getPhoneNumber().length() < 6
-        )
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body("Invalid data: \n" + registrationRequest.toString());
-
-        if (this.accountInfoRepository.findByPhoneNumber(registrationRequest.getPhoneNumber()) != null)
-            return ResponseEntity.badRequest().body("This phone number is already registered!");
-
-        // проверка по логину есть в фильтре (Ответ: Ошибка 500)
-        if (this.userService.findByLogin(registrationRequest.getLogin()) != null)
-            return ResponseEntity.badRequest().body("This login is already taken!");
-
-        final UserEntity userEntity = new UserEntity();
-        userEntity.setPassword(registrationRequest.getPassword());
-        userEntity.setLogin(registrationRequest.getLogin());
-        userEntity.setPhoneNumber(registrationRequest.getPhoneNumber());
-
-        // ПЕРЕДЕЛАТЬ ЭТОТ УЖАС
-        final AccountInfo accountInfo = new AccountInfo();
-        accountInfo.setLogin(registrationRequest.getLogin());
-        accountInfo.setBalance(0L);
-        accountInfo.setPhoneNumber(registrationRequest.getPhoneNumber());
-        accountInfo.setTitle("Default");
-        accountInfo.setPrice(0L);
-        accountInfo.setCall(0L);
-        accountInfo.setSms(0L);
-        accountInfo.setInternet(0L);
-        this.accountInfoRepository.save(accountInfo);
-
-        this.userService.saveUser(userEntity);
-        return ResponseEntity.ok("User registered successfully!");
+    public ResponseEntity<String> registerUser(@Valid @RequestBody final RegistrationRequest registrationRequest) {
+        return this.accountService.registerUser(registrationRequest);
     }
 
     @PostMapping("/auth")
     public AuthResponse auth(@RequestBody final AuthRequest request) {
-        final UserEntity userEntity =
-            this.userService.findByLoginAndPassword(request.getLogin(), request.getPassword());
-        final String token = this.jwtProvider.generateToken(userEntity.getLogin());
-        final AuthResponse authResponse = new AuthResponse(token, userEntity.getRoleEntity().getName());
-        return authResponse;
+        return this.accountService.userAuth(request);
     }
 }

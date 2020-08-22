@@ -1,44 +1,37 @@
 package com.billing.system.springsecurityjwt.controller;
 
 
-import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.billing.system.springsecurityjwt.config.jwt.JwtFilter;
 import com.billing.system.springsecurityjwt.config.jwt.JwtProvider;
 import com.billing.system.springsecurityjwt.entity.AccountInfo;
-import com.billing.system.springsecurityjwt.repository.AccountInfoRepository;
-import com.billing.system.springsecurityjwt.repository.UserEntityRepository;
+import com.billing.system.springsecurityjwt.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @CrossOrigin
 public class TestSecurityController {
-    private final UserEntityRepository userEntityRepository;
-    private final PasswordEncoder passwordEncoder;
     private final JwtProvider provider;
     private final JwtFilter jwtFilter;
-    private final AccountInfoRepository accountInfoRepository;
 
     @Autowired
     public TestSecurityController(
-        final UserEntityRepository userEntityRepository,
-        final PasswordEncoder passwordEncoder,
         final JwtProvider provider,
         final JwtFilter jwtFilter,
-        final AccountInfoRepository accountInfoRepository
+        final AccountService accountService
     ) {
-        this.userEntityRepository = userEntityRepository;
-        this.passwordEncoder = passwordEncoder;
         this.provider = provider;
         this.jwtFilter = jwtFilter;
-        this.accountInfoRepository = accountInfoRepository;
+        this.accountService = accountService;
     }
+
+    private final AccountService accountService;
 
 
     @GetMapping("/admin/get")
@@ -48,10 +41,9 @@ public class TestSecurityController {
 
     // Не смотри на этот метод
     @GetMapping("/user/info")
-    public String getUserInfo(final ServletRequest servletRequest) {
+    public String getUserInfo(final HttpServletRequest request) {
         // в попытках идентификации
-        final String token = this.jwtFilter.getTokenFromRequest((HttpServletRequest) servletRequest);
-
+        final String token = this.jwtFilter.getTokenFromRequest(request);
 
         final String info = this.provider
             .getClaimsFromToken(token)
@@ -67,9 +59,12 @@ public class TestSecurityController {
     }
 
     @GetMapping("admin/users")
-    public List<AccountInfo> getUserList() {
-        final List<AccountInfo> usersInfoList = this.accountInfoRepository.findAll();
+    public List<AccountInfo> getUsersList() {
+        return this.accountService.getUsersList();
+    }
 
-        return usersInfoList;
+    @PostMapping("profile")
+    public AccountInfo getAccountInformation(final HttpServletRequest request) {
+        return this.accountService.findAccountByToken(request);
     }
 }
