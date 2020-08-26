@@ -1,6 +1,6 @@
 # ***Billing System***
 
-###Описание:
+### Описание:
 
 Программа - реализует идею биллинговой системы имитируя работу оператора сотовой связи. 
 Смысл проекта - получить опыт использования таких технологий как:
@@ -22,6 +22,6 @@
 + **Microservice Architecture**
 
 ---
-> The product is use for training purposes.
+> The project is use for training purposes.
 
 #### created by ***Spec***
